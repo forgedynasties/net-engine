@@ -6,3 +6,4 @@ raw/
 .gitignore
 CLAUDE.md
 net-engine
+__pycache__/
