@@ -43,24 +43,26 @@ def main():
             img.save(f"{debug_dir}/page_{page_num + 1}.jpg")
             print(f"📸 Debug image saved to {debug_dir}")
 
-        # Using a RAW string to fix the SyntaxWarning
         prompt = r"""
-        You are an expert OCR engine. 
+        You are an expert OCR engine.
         I am looking at a page from a 'KIPS Diagnostic Test'.
-        
+
         STEP 1: Count how many question numbers are visible on this page (e.g., 10, 11, 12...).
         STEP 2: Extract EVERY SINGLE one of those questions.
-        
-        OUTPUT FORMAT: A JSON array of objects.
-        [
-          {"id": 10, "question": "...", "options": ["(a)...", "(b)...", "(c)...", "(d)..."], "topic": "..."},
-          ...
-        ]
-        
+
+        OUTPUT FORMAT: A JSON object with a "questions" array.
+        {
+          "questions": [
+            {"id": 10, "question": "...", "options": ["(a) ...", "(b) ...", "(c) ...", "(d) ..."], "topic": "..."},
+            ...
+          ]
+        }
+
         RULES:
-        1. Use LaTeX for math.
-        2. Ensure all 4 options are captured for every question.
-        3. Do not stop until the last question on the page is reached.
+        1. Use LaTeX for ALL math expressions (inline: $...$, display: $$...$$).
+        2. In JSON strings, ALWAYS double-escape LaTeX backslashes: \\frac, \\sqrt, \\theta, etc.
+        3. Ensure all 4 options are captured for every question.
+        4. Do not stop until the last question on the page is reached.
         """
         
         print(f"🧠 [Ollama] {args.model} is thinking...\n" + "-"*30)
@@ -88,12 +90,18 @@ def main():
 
             print("\n" + "-"*30)
             
-            json_data = json.loads(full_response)
-            if json_data:
+            # Repair unescaped LaTeX backslashes before parsing
+            # Models output \frac but JSON treats \f as formfeed — fix proactively
+            import re as _re
+            repaired = _re.sub(r'(?<!\\)\\([a-zA-Z])', lambda m: '\\\\' + m.group(1), full_response)
+
+            json_data = json.loads(repaired)
+            questions = json_data.get("questions", json_data) if isinstance(json_data, dict) else json_data
+            if questions:
                 output_path = os.path.join(output_dir, f"page_{page_num + 1}.json")
                 with open(output_path, "w") as f:
-                    json.dump(json_data, f, indent=2)
-                print(f"✅ Saved {len(json_data)} MCQs to {output_path}")
+                    json.dump({"questions": questions}, f, indent=2, ensure_ascii=False)
+                print(f"✅ Saved {len(questions)} MCQs to {output_path}")
                 
         except Exception as e:
             print(f"\n❌ Error on Page {page_num + 1}: {e}")
