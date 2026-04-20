@@ -2,3 +2,7 @@ raw/
 .venv/
 /data/
 /debug_images/
+.claudeignore
+.gitignore
+CLAUDE.md
+net-engine

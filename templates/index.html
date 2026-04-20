@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NET Prep Engine</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400&display=swap');
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: #fff;
+            color: #111;
+            font-family: 'EB Garamond', Georgia, serif;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .layout { display: flex; min-height: 100vh; }
+
+        /* Sidebar */
+        .sidebar {
+            width: 220px;
+            flex-shrink: 0;
+            border-right: 1px solid #ccc;
+            padding: 2rem 1.5rem;
+            background: #fafafa;
+        }
+        .sidebar-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        .nav-section-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: #888;
+            margin-bottom: 0.5rem;
+        }
+        .nav-btn {
+            display: block;
+            width: 100%;
+            text-align: left;
+            background: none;
+            border: none;
+            padding: 0.35rem 0.5rem;
+            font-family: inherit;
+            font-size: 0.9rem;
+            color: #333;
+            cursor: pointer;
+            border-radius: 2px;
+        }
+        .nav-btn:hover { background: #eee; }
+        .nav-btn.active { font-weight: 600; background: #e8e8e8; }
+
+        /* Main content */
+        main {
+            flex: 1;
+            padding: 3rem 4rem;
+            max-width: 860px;
+        }
+
+        .page-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+            border-bottom: 1.5px solid #111;
+            padding-bottom: 0.5rem;
+            margin-bottom: 2.5rem;
+            text-transform: capitalize;
+        }
+
+        /* Question card */
+        .question-card {
+            margin-bottom: 2.5rem;
+            padding-bottom: 2.5rem;
+            border-bottom: 1px solid #ddd;
+        }
+        .question-card:last-child { border-bottom: none; }
+
+        .question-meta {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: #888;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.6rem;
+        }
+
+        .question-text {
+            font-size: 1.05rem;
+            margin-bottom: 1.25rem;
+            line-height: 1.7;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.6rem;
+        }
+
+        .option {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #ccc;
+            background: #fff;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            transition: background 0.1s, border-color 0.1s;
+        }
+        .option:hover { background: #f0f0f0; border-color: #999; }
+
+        .placeholder {
+            color: #aaa;
+            font-style: italic;
+            margin-top: 4rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="layout">
+    <aside class="sidebar">
+        <div class="sidebar-title">NET Engine</div>
+        <nav>
+            <div class="nav-section-label">Mathematics</div>
+            <button class="nav-btn" hx-get="/view/maths/page_8" hx-target="#content">
+                Page 8
+            </button>
+        </nav>
+    </aside>
+
+    <main id="content">
+        <p class="placeholder">Select a page from the sidebar to begin.</p>
+    </main>
+</div>
+
+<script>
+    const katexOpts = {
+        delimiters: [
+            { left: "$$", right: "$$", display: true },
+            { left: "$",  right: "$",  display: false },
+            { left: "\\(", right: "\\)", display: false },
+            { left: "\\[", right: "\\]", display: true }
+        ],
+        throwOnError: false
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        renderMathInElement(document.body, katexOpts);
+    });
+
+    document.body.addEventListener('htmx:afterSwap', function(evt) {
+        renderMathInElement(evt.detail.target, katexOpts);
+    });
+</script>
+</body>
+</html>
+
+{{define "questions"}}
+<h2 class="page-title">{{.Subject}} — {{.Page}}</h2>
+
+{{range .MCQs}}
+<div class="question-card">
+    <div class="question-meta">Q{{.ID}} &nbsp;·&nbsp; {{.Topic}}</div>
+    <div class="question-text">{{.Question}}</div>
+    <div class="options-grid">
+        {{range .Options}}
+        <div class="option">{{.}}</div>
+        {{end}}
+    </div>
+</div>
+{{end}}
+{{end}}
